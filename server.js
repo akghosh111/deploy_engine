@@ -54,11 +54,17 @@ managementApp.post("/container", async (req, res) => {
         },
     });
 
+    const network = await docker.getNetwork("deploy-engine-network");
+
+    
     await container.start();
 
-    // TODO: Also connect this to the host network
+    
 
     const inspect = await container.inspect();
+    await network.connect({
+        Container: inspect.Id,
+    });
 
     return res.json({
         status: "success",
