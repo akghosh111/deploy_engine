@@ -5,7 +5,7 @@ const docker = new Docker();
 
 function pullImagePromisified(image, tag) {
     return new Promise((res, rej) => {
-        docker.pull(`${image}:${tag}`, {}, (err) => {
+        docker.pull(`${image}`, { tag }, (err) => {
             if(err){
                 rej(err);
             } else {
@@ -28,7 +28,7 @@ managementApp.get("/", (req, res) => {
 
 managementApp.post("/container", async (req, res) => {
     const { image, tag } = req.body;
-    const systemImages =  docker.listImages();
+    const systemImages =  await docker.listImages();
     let isExistingImage = false;
 
     for (const systemImage of systemImages) {
