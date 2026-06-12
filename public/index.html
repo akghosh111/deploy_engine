@@ -257,6 +257,42 @@
             background-color: #f87171;
         }
 
+        .card-actions {
+            display: flex;
+            gap: 12px;
+            margin-left: 12px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            font-size: 0.65rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+
+        .action-btn.stop:hover {
+            border-color: #facc15;
+            color: #facc15;
+        }
+
+        .action-btn.delete:hover {
+            border-color: #f87171;
+            color: #f87171;
+        }
+
         .empty-state {
             font-size: 0.8rem;
             color: var(--text-secondary);
@@ -341,15 +377,59 @@
             }
 
             listItems.innerHTML = containers.map(container => `
-                <div class="container-card">
+                <div class="container-card" data-id="${container.id}">
                     <div class="card-info">
                         <span class="card-name">${container.name}</span>
                         <span class="card-meta">${container.image} • ${container.status}</span>
-                        <a href="http://${container.domain}" target="_blank" class="card-domain">${container.domain}</a>
+                        ${container.state === 'running' 
+                            ? `<a href="http://${container.domain}" target="_blank" class="card-domain">${container.domain}</a>`
+                            : `<span class="card-meta">Offline</span>`
+                        }
                     </div>
-                    <div class="card-status ${container.state}"></div>
+                    <div class="card-actions">
+                        ${container.state === 'running' 
+                            ? `<button class="action-btn stop" onclick="stopContainer('${container.id}')">Stop</button>` 
+                            : ''
+                        }
+                        <button class="action-btn delete" onclick="deleteContainer('${container.id}')">Delete</button>
+                        <div class="card-status ${container.state}"></div>
+                    </div>
                 </div>
             `).join('');
+        };
+
+        const stopContainer = async (id) => {
+            if (!confirm('Are you sure you want to stop this container?')) return;
+            
+            try {
+                const response = await fetch(`/container/${id}/stop`, { method: 'POST' });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    fetchContainers();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to stop container');
+            }
+        };
+
+        const deleteContainer = async (id) => {
+            if (!confirm('Are you sure you want to delete this container? This action is permanent.')) return;
+
+            try {
+                const response = await fetch(`/container/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    fetchContainers();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to delete container');
+            }
         };
 
         form.addEventListener('submit', async (e) => {

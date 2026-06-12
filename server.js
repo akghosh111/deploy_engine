@@ -156,6 +156,29 @@ managementApp.post("/container/:id/stop", async (req, res) => {
     }
 })
 
+managementApp.delete("/container/:id", async (req, res) => {
+    try {
+        const containerID = req.params.id;
+        const container = docker.getContainer(containerID);
+
+
+        await container.remove({ force: true });
+
+         return res.json({
+            status: "success",
+            message: "Container deleted successfully"
+        });
+
+
+    } catch (err) {
+        const statusCode = err.statusCode === 404 ? 404 : 500;
+        return res.status(statusCode).json({
+            status:"error",
+            message: err.message
+        })
+    }
+})
+
 managementApp.listen(MANAGEMENT_API_PORT, () => {
     console.log(`ManagementAPI is running on PORT ${MANAGEMENT_API_PORT}`);
 });
