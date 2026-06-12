@@ -8,17 +8,17 @@ The system consists of two primary layers: the **Management API** and the **Reve
 
 ```mermaid
 graph TD
-    User[User] -->|HTTP 8080| ManagementUI[Management UI]
-    User -->|"*.localhost"| Proxy[Reverse Proxy]
+    User["User"] -->|HTTP 8080| ManagementUI["Management UI"]
+    User -->|"*.localhost"| Proxy["Reverse Proxy"]
     
     subgraph "Deploy Engine"
-        ManagementUI -->|REST API| ManagementApp[Express Management App]
-        ManagementApp -->|Dockerode| DockerSocket[/var/run/docker.sock]
-        Proxy -->|http-proxy| Containers{Active Containers}
+        ManagementUI -->|REST API| ManagementApp["Express Management App"]
+        ManagementApp -->|Dockerode| DockerSocket["/var/run/docker.sock"]
+        Proxy -->|"http-proxy"| Containers{"Active Containers"}
     end
     
     DockerSocket -->|Lifecycle| Containers
-    Containers -->|Internal Network| Proxy
+    Containers -->|"Internal Network"| Proxy
 ```
 
 ### Core Components
