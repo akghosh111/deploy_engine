@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - REVERSE_PROXY_HOST=localhost
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./public:/public

@@ -102,6 +102,31 @@ managementApp.post("/container", async (req, res) => {
 
 } )
 
+managementApp.get("/containers", async(req, res) => {
+    try {
+        const containers = await docker.listContainers({ all: true });
+
+        const data = containers.map(container => ({
+            id: container.Id,
+            name: container.Names[0].replace("/", ""),
+            image: container.Image,
+            state: container.State,
+            status: container.Status,
+            domain: `${container.Names[0].replace("/", "")}.${REVERSE_PROXY_HOST}`
+        }));
+
+        return res.json({
+            status: "success",
+            data: data
+        });
+    } catch (err) {
+        return res.status(500).json({
+            status:"error",
+            message: err.message
+        })
+    }
+})
+
 managementApp.listen(MANAGEMENT_API_PORT, () => {
     console.log(`ManagementAPI is running on PORT ${MANAGEMENT_API_PORT}`);
 });
