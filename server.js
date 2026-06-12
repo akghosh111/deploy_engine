@@ -1,5 +1,8 @@
+import path from "node:path";
 import express from "express";
 import Docker from "dockerode";
+
+import httpProxy from "http-proxy";
 
 const docker = new Docker();
 
@@ -16,15 +19,20 @@ function pullImagePromisified(image, tag) {
 }
 
 const managementApp = express();
+const proxyApp = express();
+
+
+const proxy = httpProxy.createProxy();
 
 managementApp.use(express.json());
+managementApp.use(express.static(path.resolve("./public")));
 
 const MANAGEMENT_API_PORT = process.env.MANAGEMENT_API_PORT ?? 8080;
 const REVERSE_PROXY_HOST = process.env.REVERSE_PROXY_HOST ?? "localhost";
 
-managementApp.get("/", (req, res) => {
-    return res.json({ status: "Management APIs are up and running" });
-});
+// managementApp.get("/", (req, res) => {
+//     return res.json({ status: "Management APIs are up and running" });
+// });
 
 managementApp.post("/container", async (req, res) => {
     const { image, tag } = req.body;
@@ -80,3 +88,15 @@ managementApp.post("/container", async (req, res) => {
 managementApp.listen(MANAGEMENT_API_PORT, () => {
     console.log(`ManagementAPI is running on PORT ${MANAGEMENT_API_PORT}`);
 });
+
+
+proxyApp.use((req, res) => {
+    const containerName = req.hostname.split(".")[0]
+    return proxy.web(req, res, {
+        target: `http://${containerName}:80`
+    });
+});
+
+proxyApp.listen(80, () => {
+    console.log(`Reverse Proxy is running on PORT 80`);
+})
