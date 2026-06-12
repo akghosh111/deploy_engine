@@ -7,15 +7,32 @@ import httpProxy from "http-proxy";
 const docker = new Docker();
 
 function pullImagePromisified(image, tag) {
-    return new Promise((res, rej) => {
-        docker.pull(`${image}`, { tag }, (err) => {
-            if(err){
-                rej(err);
-            } else {
-                return res(true);
-            }
-        })
-    })
+  return new Promise((res, rej) => {
+    docker.pull(`${image}:${tag}`, {}, (err, stream) => {
+      if (err) {
+        return rej(err);
+      }
+
+      docker.modem.followProgress(
+        stream,
+        (doneErr, output) => {
+          if (doneErr) {
+            return rej(doneErr);
+          }
+          return res(output);
+        },
+        (event) => {
+          if (event.status) {
+            console.log(
+              `[pull ${image}:${tag}] ${event.status}${
+                event.progress ? ` ${event.progress}` : ''
+              }`,
+            );
+          }
+        },
+      );
+    });
+  });
 }
 
 const managementApp = express();
