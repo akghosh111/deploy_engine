@@ -127,6 +127,35 @@ managementApp.get("/containers", async(req, res) => {
     }
 })
 
+
+managementApp.post("/container/:id/stop", async (req, res) => {
+
+    try {
+        const containerID = req.params.id;
+        const container = docker.getContainer(containerID);
+
+        const info = await container.inspect();
+
+        if(!info.State.Running){
+            return res.status(400).json({ status:"error", message: "Container already stopped" });
+        }
+
+
+        await container.stop()
+
+        return res.json({
+            status: "success",
+            message: "Container successfully stopped"
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            status:"error",
+            message: err.message
+        })
+    }
+})
+
 managementApp.listen(MANAGEMENT_API_PORT, () => {
     console.log(`ManagementAPI is running on PORT ${MANAGEMENT_API_PORT}`);
 });
